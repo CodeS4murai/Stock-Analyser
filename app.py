@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import requests
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -75,25 +76,57 @@ def clean_and_feature_engineer(df, sma_period):
 
 
 def plot_stock_data(df, symbol, sma_period):
-    """Plot closing price, SMA, and volume."""
-    fig, ax1 = plt.subplots(figsize=(14, 7))
+    """Plot closing price, SMA, and volume using Plotly."""
+    fig = go.Figure()
+    
+    # Closing Price Line
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=df['Close'],
+        mode='lines',
+        name='Closing Price'
+    ))
 
-    # Primary axis (Price & SMA)
-    ax1.plot(df.index, df['Close'], color='tab:blue', label='Closing Price', linewidth=1.5)
-    ax1.plot(df.index, df[f'{sma_period}_day_SMA'], color='red', linestyle='--',
-             label=f'{sma_period}-Day SMA', linewidth=2)
-    ax1.set_xlabel("Date")
-    ax1.set_ylabel("Closing Price ($)")
-    ax1.legend(loc='upper left')
-    ax1.grid(True, linestyle=':', alpha=0.6)
+    # SMA Line
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=df[f'{sma_period}_day_SMA'],
+        mode='lines',
+        name=f'{sma_period}-Day SMA',
+        line=dict(dash='dash')
+    ))
 
-    # Secondary axis (Volume)
-    ax2 = ax1.twinx()
-    ax2.bar(df.index, df['Volume'], color='gray', alpha=0.3, label='Volume')
-    ax2.set_ylabel("Trading Volume")
+    # Volume Bars (Secondary Axis)
+    fig.add_trace(go.Bar(
+        x=df.index,
+        y=df['Volume'],
+        name='Volume',
+        opacity=0.3,
+        yaxis='y2'
+    ))
 
-    plt.title(f"📊 {symbol} - Price, SMA & Volume (Last 180 Days)")
-    fig.tight_layout()
+    # Layout Configuration
+    fig.update_layout(
+        title=f"📊 {symbol} - Price, SMA & Volume (Last 180 Days)",
+        xaxis=dict(title="Date"),
+
+        yaxis=dict(
+            title="Closing Price ($)",
+            side="left"
+        ),
+
+        yaxis2=dict(
+            title="Volume",
+            overlaying="y",
+            side="right",
+            showgrid=False
+        ),
+
+        legend=dict(x=0, y=1.1, orientation="h"),
+        height=600,
+        margin=dict(l=40, r=40, t=80, b=40)
+    )
+
     return fig
 
 
@@ -119,10 +152,9 @@ if fetch_button:
             # Chart
             st.subheader("📈 Historical Chart")
             fig = plot_stock_data(df_recent, symbol, sma_period)
-            st.pyplot(fig)
+            st.plotly_chart(fig, use_container_width=True)
 
             # Raw Data Option
-           # with st.expander("📄 View Processed DataFrame"):
             st.dataframe(df_recent.tail(30))
 
             st.success("✅ Analysis Complete!")
