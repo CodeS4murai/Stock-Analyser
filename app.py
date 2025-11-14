@@ -25,6 +25,7 @@ sma_period = st.sidebar.slider("📊 SMA Period (Days)", min_value=5, max_value=
 st.sidebar.markdown("---")
 fetch_button = st.sidebar.button("🚀 Fetch & Analyze Data")
 
+
 # --- FUNCTION DEFINITIONS ---
 def fetch_stock_data(symbol, api_key, output_size='full'):
     """Fetch daily stock data from Alpha Vantage API."""
@@ -132,16 +133,26 @@ def plot_stock_data(df, symbol, sma_period):
 
 
 # --- MAIN APP EXECUTION ---
-if fetch_button:
-    symbol_to_fetch = symbol
+if "current_symbol" not in st.session_state:
+    st.session_state.current_symbol = "AAPL"
+    st.session_state.should_fetch = True  # fetch AAPL only once
 else:
-    symbol_to_fetch = symbol  # default AAPL
+    st.session_state.should_fetch = fetch_button  # fetch only if button pressed
 
+# Update the symbol only when the button is clicked
+if fetch_button:
+    st.session_state.current_symbol = symbol
 
-with st.spinner(f"Fetching data for **{symbol_to_fetch}**..."):
-    df_raw = fetch_stock_data(symbol_to_fetch, api_key, "full")
+symbol_to_fetch = st.session_state.current_symbol
 
-if df_raw is not None and not df_raw.empty:
+# Conditional fetch — only run when needed
+if st.session_state.should_fetch:
+    with st.spinner(f"Fetching data for **{symbol_to_fetch}**..."):
+        df_raw = fetch_stock_data(symbol_to_fetch, api_key, "full")
+else:
+    df_raw = None
+
+if st.session_state.should_fetch and df_raw is not None and not df_raw.empty:
     df_processed = clean_and_feature_engineer(df_raw, sma_period)
     df_recent = df_processed.tail(180)
 
@@ -157,6 +168,6 @@ if df_raw is not None and not df_raw.empty:
 
     st.dataframe(df_recent.tail(30))
     st.success("✅ Analysis Complete!")
-else:
+elif st.session_state.should_fetch and df_raw is None:
     st.error("Failed to fetch or process data. Check API key or symbol.")
 
