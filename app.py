@@ -63,7 +63,7 @@ def clean_and_feature_engineer(df, sma_period):
         '4. close': 'Close', '5. volume': 'Volume'
     }
     df = df.rename(columns=column_mapping)
-    df.index = pd.to_datetime(df.index)
+    df.index = pd.to_datetime(df.index).date
     df = df.sort_index()
 
     numeric_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
