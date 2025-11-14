@@ -34,6 +34,7 @@ def fetch_stock_data(symbol, api_key, output_size='full'):
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
+        print(data)
 
         if "Error Message" in data:
             st.error(f"❌ API Error: {data['Error Message']}")
