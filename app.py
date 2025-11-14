@@ -64,7 +64,7 @@ def clean_and_feature_engineer(df, sma_period):
     }
     df = df.rename(columns=column_mapping)
     df.index = pd.to_datetime(df.index).date
-    df = df.sort_index()
+    df.index.name = "Date"
 
     numeric_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
     df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce')
