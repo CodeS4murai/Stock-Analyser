@@ -18,9 +18,8 @@ st.markdown("Analyze historical stock data with **Alpha Vantage** API integratio
 # --- SIDEBAR CONFIGURATION ---
 st.sidebar.header("⚙️ Configuration")
 
-api_key = st.sidebar.text_input("🔑 Enter your Alpha Vantage API Key", type="password", value="1YQNQ3SAOTES4V19")
-symbol = st.sidebar.text_input("📉 Stock Symbol", value="AAPL", help="Example: AAPL, TSLA, GOOGL, MSFT, etc.")
-output_size = st.sidebar.selectbox("📦 Output Size", ["compact", "full"], index=1)
+api_key = st.secrets["ALPHA_VANTAGE_API_KEY"] 
+symbol = st.sidebar.selectbox("📉 Stock Symbol", ["AAPL", "TSLA", "GOOGL", "MSFT", "AMZN", "NVDA"], index=0)
 sma_period = st.sidebar.slider("📊 SMA Period (Days)", min_value=5, max_value=100, value=20, step=5)
 
 st.sidebar.markdown("---")
@@ -132,31 +131,30 @@ def plot_stock_data(df, symbol, sma_period):
 
 # --- MAIN APP EXECUTION ---
 if fetch_button:
-    if not api_key or not symbol:
-        st.warning("⚠️ Please enter both API Key and Stock Symbol.")
-    else:
-        with st.spinner(f"Fetching data for **{symbol}**..."):
-            df_raw = fetch_stock_data(symbol, api_key, output_size)
+    symbol_to_fetch = symbol
+else:
+    symbol_to_fetch = symbol  # default AAPL
 
-        if df_raw is not None and not df_raw.empty:
-            df_processed = clean_and_feature_engineer(df_raw, sma_period)
-            df_recent = df_processed.tail(180)
 
-            # Display Summary Metrics
-            st.subheader(f"📘 Summary for {symbol}")
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Latest Date", df_recent.index[-1].strftime("%Y-%m-%d"))
-            col2.metric("Closing Price", f"${df_recent['Close'].iloc[-1]:.2f}")
-            col3.metric(f"{sma_period}-Day SMA", f"${df_recent[f'{sma_period}_day_SMA'].iloc[-1]:.2f}")
+with st.spinner(f"Fetching data for **{symbol_to_fetch}**..."):
+    df_raw = fetch_stock_data(symbol_to_fetch, api_key, "full")
 
-            # Chart
-            st.subheader("📈 Historical Chart")
-            fig = plot_stock_data(df_recent, symbol, sma_period)
-            st.plotly_chart(fig, use_container_width=True)
+if df_raw is not None and not df_raw.empty:
+    df_processed = clean_and_feature_engineer(df_raw, sma_period)
+    df_recent = df_processed.tail(180)
 
-            # Raw Data Option
-            st.dataframe(df_recent.tail(30))
+    st.subheader(f"📘 Summary for {symbol_to_fetch}")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Latest Date", df_recent.index[-1].strftime("%Y-%m-%d"))
+    col2.metric("Closing Price", f"${df_recent['Close'].iloc[-1]:.2f}")
+    col3.metric(f"{sma_period}-Day SMA", f"${df_recent[f'{sma_period}_day_SMA'].iloc[-1]:.2f}")
 
-            st.success("✅ Analysis Complete!")
-        else:
-            st.error("Failed to fetch or process data. Check API key or symbol.")
+    st.subheader("📈 Historical Chart")
+    fig = plot_stock_data(df_recent, symbol_to_fetch, sma_period)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.dataframe(df_recent.tail(30))
+
+else:
+    st.error("Failed to fetch or process data. Check API key or symbol.")
+
