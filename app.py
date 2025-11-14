@@ -154,7 +154,7 @@ if df_raw is not None and not df_raw.empty:
     st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(df_recent.tail(30))
-
+    st.success("✅ Analysis Complete!")
 else:
     st.error("Failed to fetch or process data. Check API key or symbol.")
 
