@@ -19,6 +19,8 @@ st.markdown("Analyze historical stock data with **Alpha Vantage** API integratio
 st.sidebar.header("⚙️ Configuration")
 
 api_key = st.secrets["ALPHA_VANTAGE_API_KEY"] 
+st.write("Loaded API Key?", "YES" if "ALPHA_VANTAGE_API_KEY" in st.secrets else "NO")
+st.write("Key Length:", len(st.secrets.get("ALPHA_VANTAGE_API_KEY", "")))
 symbol = st.sidebar.selectbox("📉 Stock Symbol", ["AAPL", "TSLA", "GOOGL", "MSFT", "AMZN", "NVDA"], index=0)
 sma_period = st.sidebar.slider("📊 SMA Period (Days)", min_value=5, max_value=100, value=20, step=5)
 
