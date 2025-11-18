@@ -27,6 +27,11 @@ fetch_button = st.sidebar.button("🚀 Fetch & Analyze Data")
 
 
 # --- FUNCTION DEFINITIONS ---
+
+@st.cache_data(ttl=3600)
+def fetch_stock_data_cached(symbol, api_key, output_size='full'):
+    return fetch_stock_data(symbol, api_key, output_size)
+
 def fetch_stock_data(symbol, api_key, output_size='full'):
     """Fetch daily stock data from Alpha Vantage API."""
     url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize={output_size}&apikey={api_key}"
@@ -148,7 +153,7 @@ symbol_to_fetch = st.session_state.current_symbol
 # Conditional fetch — only run when needed
 if st.session_state.should_fetch:
     with st.spinner(f"Fetching data for **{symbol_to_fetch}**..."):
-        df_raw = fetch_stock_data(symbol_to_fetch, api_key, "full")
+        df_raw = fetch_stock_data_cached(symbol_to_fetch, api_key, "full")
 else:
     df_raw = None
 
